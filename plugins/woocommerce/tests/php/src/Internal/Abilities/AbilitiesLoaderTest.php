@@ -1844,7 +1844,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		$updated = wp_get_ability( 'woocommerce/product-update' )->execute(
 			array(
 				'id'            => $small_id,
-				'type'          => 'variation',
 				'regular_price' => '8.00',
 			)
 		);
@@ -1866,7 +1865,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		$wrong_option = wp_get_ability( 'woocommerce/product-update' )->execute_change(
 			array(
 				'id'         => $small_id,
-				'type'       => 'variation',
 				'attributes' => array(
 					array(
 						'name'   => 'Size',
@@ -1881,7 +1879,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		$resized = wp_get_ability( 'woocommerce/product-update' )->execute(
 			array(
 				'id'         => $parent_id,
-				'type'       => 'variable',
 				'attributes' => array(
 					array(
 						'name'    => 'Size',
@@ -1952,7 +1949,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		$updated = wp_get_ability( 'woocommerce/product-update' )->execute(
 			array(
 				'id'         => $parent_id,
-				'type'       => 'variable',
 				'attributes' => array(
 					array(
 						'name'    => 'Size',
@@ -1987,7 +1983,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		$deleted = wp_get_ability( 'woocommerce/product-update' )->execute(
 			array(
 				'id'         => $parent_id,
-				'type'       => 'variable',
 				'variations' => array(
 					array(
 						'id'     => $medium_id,
@@ -2005,7 +2000,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		$foreign                     = wp_get_ability( 'woocommerce/product-update' )->execute_change(
 			array(
 				'id'         => $parent_id,
-				'type'       => 'variable',
 				'variations' => array( array( 'id' => $other->get_children()[0] ) ),
 			)
 		);
@@ -2015,7 +2009,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		$duplicate = wp_get_ability( 'woocommerce/product-update' )->execute_change(
 			array(
 				'id'         => $parent_id,
-				'type'       => 'variable',
 				'variations' => array(
 					array(
 						'attributes' => array(
@@ -2030,6 +2023,17 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 		);
 		$this->assertWPError( $duplicate );
 		$this->assertSame( 'woocommerce_product_variation_duplicate', $duplicate->get_error_code() );
+
+		$simple                      = \WC_Helper_Product::create_simple_product();
+		$this->created_product_ids[] = $simple->get_id();
+		$not_variable                = wp_get_ability( 'woocommerce/product-update' )->execute(
+			array(
+				'id'         => $simple->get_id(),
+				'variations' => array( array( 'regular_price' => '1.00' ) ),
+			)
+		);
+		$this->assertWPError( $not_variable );
+		$this->assertSame( 'woocommerce_product_field_unsupported', $not_variable->get_error_code() );
 	}
 
 	/**
@@ -2051,7 +2055,6 @@ class AbilitiesLoaderTest extends \WC_Unit_Test_Case {
 			$result = wp_get_ability( 'woocommerce/product-update' )->execute_change(
 				array(
 					'id'         => $created['product']['id'],
-					'type'       => 'variable',
 					'name'       => 'Renamed shirt',
 					'attributes' => array(
 						array(
