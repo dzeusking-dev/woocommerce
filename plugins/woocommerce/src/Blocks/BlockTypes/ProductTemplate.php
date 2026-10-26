@@ -168,22 +168,21 @@ class ProductTemplate extends AbstractBlock {
 	/**
 	 * Determines whether a block list contains a block that uses the featured image.
 	 *
-	 * @param WP_Block_List $inner_blocks Inner block instance.
-	 *
+	 * @param \WP_Block_List $inner_blocks Inner block instance.
 	 * @return bool Whether the block list contains a block that uses the featured image.
 	 */
 	protected function block_core_post_template_uses_featured_image( $inner_blocks ) {
+		// Covers 'core/post-featured-image' and 'core/cover' as of WooCommerce v11.4
+		if ( block_core_post_template_uses_featured_image( $inner_blocks ) ) {
+			return true;
+		}
+
+		// Covers 'woocommerce/product-image', which is a Woo cores' analog of 'core/post-featured-image'.
 		foreach ( $inner_blocks as $block ) {
-			if ( 'core/post-featured-image' === $block->name ) {
+			if ( 'woocommerce/product-image' === $block->name ) {
 				return true;
 			}
-			if (
-			'core/cover' === $block->name &&
-			! empty( $block->attributes['useFeaturedImage'] )
-			) {
-				return true;
-			}
-			if ( $block->inner_blocks && block_core_post_template_uses_featured_image( $block->inner_blocks ) ) {
+			if ( $block->inner_blocks && $this->block_core_post_template_uses_featured_image( $block->inner_blocks ) ) {
 				return true;
 			}
 		}
