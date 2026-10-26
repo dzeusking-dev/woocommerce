@@ -811,7 +811,7 @@ class WC_Product_CSV_Importer extends WC_Product_Importer {
 			$parts[ $key ] = str_replace( '\n', "\n", $part );
 		}
 
-		return implode( '\\\n', $parts );
+		return implode( '\n', $parts );
 	}
 
 	/**
