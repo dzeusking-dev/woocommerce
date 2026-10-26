@@ -184,6 +184,8 @@ class ProductTemplate extends AbstractBlock {
 				return true;
 			}
 		}
+
+		return false;
 	}
 
 	/**
