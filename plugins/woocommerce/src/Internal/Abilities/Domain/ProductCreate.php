@@ -129,7 +129,8 @@ class ProductCreate extends ActionableAbility {
 			}
 
 			if ( $subject instanceof \WC_Product_Variation ) {
-				if ( ! wc_get_product( $subject->get_parent_id() ) instanceof \WC_Product_Variable ) {
+				$parent = wc_get_product( $subject->get_parent_id() );
+				if ( ! $parent instanceof \WC_Product_Variable ) {
 					return new \WP_Error(
 						'woocommerce_product_parent_invalid',
 						__( 'The parent must be a variable product.', 'woocommerce' ),
@@ -139,6 +140,7 @@ class ProductCreate extends ActionableAbility {
 				if ( ! $subject->get_status( 'edit' ) ) {
 					$subject->set_status( ProductStatus::PUBLISH );
 				}
+				return self::check_variation_attributes( $subject, $parent );
 			}
 
 			if ( $subject instanceof \WC_Product_Variable ) {

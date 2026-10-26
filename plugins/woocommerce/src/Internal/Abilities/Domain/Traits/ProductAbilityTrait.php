@@ -60,32 +60,10 @@ trait ProductAbilityTrait {
 					),
 					'type' => self::get_product_type_schema( $product_types ),
 				),
-				self::get_product_mutation_field_schemas_for_fields( $fields ),
-				in_array( 'attributes', $fields, true ) ? array( 'attributes' => self::get_product_update_attributes_schema() ) : array()
+				self::get_product_mutation_field_schemas_for_fields( $fields )
 			),
 			'required'             => array( 'id' ),
 			'additionalProperties' => false,
-		);
-	}
-
-	/**
-	 * Get the schema of the `attributes` input of an update. A variable
-	 * product takes attributes with their options, and a variation takes the
-	 * option it picks for each attribute. The update checks the shape against
-	 * the type of the loaded product.
-	 *
-	 * @return array
-	 */
-	private static function get_product_update_attributes_schema(): array {
-		return array(
-			'type'        => 'array',
-			'description' => __( 'On a variable product, the attributes with their options. On a variation, the option it picks for each attribute of its parent.', 'woocommerce' ),
-			'items'       => array(
-				'anyOf' => array(
-					self::get_product_attributes_schema( false )['items'],
-					self::get_product_attributes_schema( true )['items'],
-				),
-			),
 		);
 	}
 
@@ -379,8 +357,10 @@ trait ProductAbilityTrait {
 	 *
 	 * The product class decides which Core fields apply. A type whose class
 	 * extends a Core class gets the fields of that class. A variable type
-	 * accepts `attributes` and `variations`, and a variation accepts
-	 * `parent_id` on create.
+	 * accepts `attributes` and `variations`. A variation accepts `parent_id`
+	 * and `attributes` on create only: on update its options change through
+	 * the `variations` input of its parent, which checks them against the
+	 * other variations.
 	 *
 	 * @param string $product_type Product type.
 	 * @param bool   $creating     Whether the fields are for a create.
@@ -404,6 +384,8 @@ trait ProductAbilityTrait {
 			$config = self::get_variation_config();
 			if ( $creating ) {
 				$config['fields'][] = 'parent_id';
+			} else {
+				$config['fields'] = array_values( array_diff( $config['fields'], array( 'attributes' ) ) );
 			}
 			return $config;
 		}
@@ -622,18 +604,6 @@ trait ProductAbilityTrait {
 			}
 
 			$product->{$setter}( $prepared_value );
-		}
-
-		if ( $product instanceof \WC_Product_Variation && array_key_exists( 'attributes', $input ) && $product->get_parent_id() > 0 ) {
-			$parent = wc_get_product( $product->get_parent_id() );
-			if ( ! $parent instanceof \WC_Product_Variable ) {
-				return new \WP_Error(
-					'woocommerce_product_parent_invalid',
-					__( 'The parent must be a variable product.', 'woocommerce' ),
-					array( 'status' => 400 )
-				);
-			}
-			return self::check_variation_attributes( $product, $parent );
 		}
 
 		return null;
